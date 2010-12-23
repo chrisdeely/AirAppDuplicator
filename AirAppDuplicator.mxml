@@ -1,0 +1,156 @@
+<?xml version="1.0"?>
+<s:WindowedApplication
+        xmlns:fx="http://ns.adobe.com/mxml/2009"
+        xmlns:s="library://ns.adobe.com/flex/spark"
+        xmlns:mx="library://ns.adobe.com/flex/mx"
+        showStatusBar="false">
+    <s:layout>
+        <s:VerticalLayout paddingBottom="14" paddingLeft="14" paddingRight="14" paddingTop="14"/>
+    </s:layout>
+    <fx:Script>
+        <![CDATA[
+        import mx.controls.Alert;
+
+        private var destinationDirectory:File;
+        private var sourceDirectory:File;
+        private var appXML:XML;
+
+        public function get isMac():Boolean
+        {
+            return Capabilities.os.toLowerCase().indexOf('mac') > -1;
+        }
+
+        public function get appXMLPath():String
+        {
+            var p:String = "META-INF/AIR/application.xml";
+            return isMac ? "Contents/Resources/" + p : p;
+        }
+
+        private function appDirectorySelected(event:Event):void
+        {
+            sourceDirectory = File(fileTree.selectedItem);
+            if(!sourceDirectory.exists)
+            {
+                Alert.show("Directory doesn't exist");
+                return;
+            }
+
+            if(!sourceDirectory.isDirectory)
+            {
+                Alert.show("Please select a Directory");
+                return;
+            }
+
+            var appXMLFile:File = sourceDirectory.resolvePath( appXMLPath );
+            if(!appXMLFile.exists)
+            {
+                Alert.show("This does not appear to be a valid AIR application.");
+                return;
+            }
+
+            applicationDirectory.text = sourceDirectory.nativePath;
+            this.currentState = 'selectDestination';
+
+            appXML = readXMLFromFile(appXMLFile);
+            var ns:Namespace = appXML.namespace();
+            var appId:String = appXML.ns::id[0];
+            var appFileName:String = appXML.ns::filename[0];
+
+            var inc:uint = 1;
+            destinationDirectory = new File(sourceDirectory.parent.nativePath);
+
+            while(destinationDirectory.exists)
+            {
+                inc++;
+                newAppID.text = appId + inc;
+                var dest:String = appFileName+inc;
+                if( isMac )
+                     dest += ".app";
+                destinationDirectory = new File(sourceDirectory.parent.nativePath).resolvePath(dest);
+            }
+
+            destinationDirectoryText.text =  destinationDirectory.nativePath;
+        }
+
+        private function writeXMLToFile(xml:XML, file:File):void
+        {
+            var fs:FileStream = new FileStream();
+            fs.open(file, FileMode.WRITE);
+            fs.writeUTFBytes(xml.toXMLString());
+            fs.close();
+            fs = null;
+        }
+        private function readXMLFromFile(appXMLFile:File):XML
+        {
+            var xml:XML;
+            var fs:FileStream = new FileStream();
+            fs.open(appXMLFile, FileMode.READ);
+            var contents:String = fs.readUTFBytes(fs.bytesAvailable);
+            fs.close();
+            fs = null;
+            xml = new XML(contents);
+            return xml;
+        }
+
+
+        private function executeCopy():void
+        {
+
+
+            sourceDirectory.addEventListener(Event.COMPLETE, copyComplete);
+            sourceDirectory.copyToAsync(destinationDirectory);
+        }
+
+        private function copyComplete(event:Event):void
+        {
+            var file:File = destinationDirectory.resolvePath(appXMLPath);
+            appXML = readXMLFromFile(file);
+            var ns:Namespace = appXML.namespace();
+            appXML.ns::id[0] = newAppID.text;
+            writeXMLToFile(appXML, file);
+
+            this.currentState = 'complete';
+        }
+        ]]>
+    </fx:Script>
+
+    <s:states>
+        <s:State name="selectApp"/>
+        <s:State name="selectDestination"/>
+        <s:State name="complete"/>
+    </s:states>
+
+    <s:VGroup width="100%">
+        <s:Label text="This application will allow you to create duplicate installations of existing Adobe AIR apps."/>
+        <s:Label text="Upon copying the app, you should be able to run both instances simultaneously."/>
+        <s:Label text="I cannot guarantee this will work with all apps, and data corruption may occur."/>
+        <s:Label text="PROCEED AT YOUR OWN RISK!" color="red"/>
+    </s:VGroup>
+    <s:VGroup width="100%" height="100%" includeIn="selectApp">
+        <mx:FileSystemTree id="fileTree" width="100%" height="100%"
+                change="applicationDirectory.text = File(fileTree.selectedItem).nativePath;">
+        </mx:FileSystemTree>
+        <mx:Button label="Select" click="appDirectorySelected(event)"/>
+        <s:TextInput id="applicationDirectory" text="Current Application..." enabled="false" width="100%"/>
+    </s:VGroup>
+
+    <s:VGroup width="100%" includeIn="selectDestination">
+        <s:HGroup width="100%" >
+            <s:Label text="Destination Directory"/>
+            <s:TextInput id="destinationDirectoryText" enabled="false" width="100%"/>
+        </s:HGroup>
+        <s:HGroup width="100%" >
+            <s:Label text="New App ID"/>
+            <s:TextInput id="newAppID" enabled="false" width="100%"/>
+        </s:HGroup>
+        <s:Button label="Copy!" click="executeCopy()"/>
+        <s:Button label="Go Back" click="this.currentState = 'selectApp'"/>
+    </s:VGroup>
+
+    <s:VGroup width="100%" includeIn="complete">
+        <s:Label text="Copy completed successfully!"  />
+        <s:Button label="Copy Another" click="this.currentState = 'selectApp'"/>
+    </s:VGroup>
+
+
+</s:WindowedApplication>
