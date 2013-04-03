@@ -11,6 +11,11 @@ I can.
 
 I have had good reports of this working well for HipChat & TweetDeck clients.
 
+On Windows 7/8 you may need to run the app as Administrator in order for it to have proper system access.
+- Navigate to C:\Program Files\AIRAppDuplicator
+- Right-click on AIRAppDuplicator.exe
+- Select 'Run as Administrator'
+
 Tech Notes
 ----------
 
