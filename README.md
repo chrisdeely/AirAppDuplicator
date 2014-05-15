@@ -9,8 +9,6 @@ Why would you want to do this?  Well... that's up to you I guess. I have
 used a few AIR apps where I wish I could open multiple windows at once. Now 
 I can.
 
-I have had good reports of this working well for HipChat & TweetDeck clients.
-
 On Windows 7/8 you may need to run the app as Administrator in order for it to have proper system access.
 - Navigate to C:\Program Files\AIRAppDuplicator
 - Right-click on AIRAppDuplicator.exe
