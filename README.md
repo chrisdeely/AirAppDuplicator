@@ -1,6 +1,7 @@
+[ARCHIVED] - This repo is now in public archive. The AIR Platform has been defunct for many years, so this tool is of limited, if any, utility at this time.
+
 AirAppDuplicator 1.0.0
 ======================
-[Click here to download the installer](https://github.com/downloads/chrisdeely/AirAppDuplicator/AIRAppDuplicator.air)
 
 This is a very simple Adobe AIR application which will allow you to easily 
 make duplicate installations of any AIR application.
